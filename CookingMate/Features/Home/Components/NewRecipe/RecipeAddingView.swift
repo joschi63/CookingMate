@@ -12,7 +12,7 @@ struct RecipeAddingView: View {
     
     @State private var viewModel = RecipeAddingViewModel()
     
-    @State private var urlInputFocused = false
+    @State private var successfullSave: Bool = false
     
     var body: some View {
         ZStack {
@@ -98,12 +98,22 @@ struct RecipeAddingView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Button {
-                    
-                } label: {
-                    Text("Speichern")
-                        .font(.headline)
-                        .foregroundStyle(viewModel.hasRecipe ? Color.green : Color.gray)
+                    Task {
+                        successfullSave = await viewModel.saveRecipe()
                         
+                        if successfullSave {
+                            dismiss()
+                        }
+                    }
+                } label: {
+                    if viewModel.isSubmitting {
+                        ProgressView()
+                            .frame(maxWidth: .infinity)
+                    } else {
+                        Text("Speichern")
+                            .font(.headline)
+                            .foregroundStyle(viewModel.hasRecipe ? Color.green : Color.gray)
+                    }
                 }
                 .disabled(!viewModel.hasRecipe)
             }

@@ -5,6 +5,10 @@ struct GetRecipe: Encodable {
     let url: String
 }
 
+private struct SaveRecipeResponse: Decodable {
+    let message: String
+}
+
 enum RecipeAddingError: LocalizedError {
     case invalidURL
     case unreachableURL
@@ -44,7 +48,7 @@ final class RecipeAddingViewModel {
     var recipeURL: String = "https://www.bremer-gewuerzhandel.de/rezepte/gruene-bohnen-mit-speck-und-zwiebeln"
     
     var errorMessage: String? = nil
-
+    
     
     func getNewRecipe(from input: String) async throws -> Recipe {
         guard let url = RecipeURLValidator.completeURL(from: input) else {
@@ -80,6 +84,28 @@ final class RecipeAddingViewModel {
             errorMessage = nil
         } catch {
             errorMessage = error.localizedDescription
+        }
+    }
+    
+    func saveRecipe() async -> Bool {
+        guard let recipe else { return false }
+        
+        isSubmitting = true
+        defer { isSubmitting = false }
+        
+        async let minimumDelay: Void = try! Task.sleep(for: .seconds(2))
+        
+        do {
+            let _: SaveRecipeResponse = try await NetworkManager.shared.post(
+                endpoint: "/newrecipe/save/\(recipe.id.uuidString)")
+            
+            _ = await minimumDelay
+            
+            errorMessage = nil
+            return true
+        } catch {
+            errorMessage = error.localizedDescription
+            return false
         }
     }
 }

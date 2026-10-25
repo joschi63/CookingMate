@@ -67,6 +67,21 @@ class NetworkManager {
         return try handleResponse(data: data, response: response)
     }
     
+    /// Sends a POST request without a JSON body.
+    func post<T: Decodable>(endpoint: String) async throws -> T {
+        let url = Enviroment.baseURL.appendingPathComponent(endpoint)
+
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+
+        let token = try await login()
+        request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+
+        let (data, response) = try await URLSession.shared.data(for: request)
+        return try handleResponse(data: data, response: response)
+    }
+    
     func post<T: Decodable, B: Encodable>(endpoint: String, body: B) async throws -> T {
         let url = Enviroment.baseURL.appendingPathComponent(endpoint)
         
